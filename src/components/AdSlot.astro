@@ -1,0 +1,28 @@
+---
+interface Props {
+  slot: 'ad-top' | 'ad-bottom' | 'ad-sidebar';
+}
+const { slot } = Astro.props;
+const sizeClass = slot === 'ad-sidebar' ? 'ad-slot-sidebar' : 'ad-slot-top';
+---
+
+<div
+  class:list={['ad-slot flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-400 text-xs', sizeClass]}
+  data-no-print
+  aria-hidden="true"
+>
+  <!--
+    Replace this placeholder with your real AdSense unit:
+
+    <ins
+      class="adsbygoogle"
+      style="display:block"
+      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+      data-ad-slot="XXXXXXXXXX"
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    ></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+  <span>[ Ad — {slot} ]</span>
+</div>

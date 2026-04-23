@@ -1,2 +1,28 @@
+# Dependencies
 node_modules/
+
+# Astro build output
+dist/
+.astro/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+*.log
+
+# Generated PDFs (from CLI tool)
 *.pdf

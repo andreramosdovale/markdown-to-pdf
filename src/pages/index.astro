@@ -1,0 +1,56 @@
+---
+import EditorApp from '../components/EditorApp';
+import AdSlot from '../components/AdSlot.astro';
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Markdown to PDF — Free Online Converter</title>
+  <meta name="description" content="Convert Markdown to PDF. Supports Mermaid diagrams, KaTeX math, syntax highlighting, tables, and all CommonMark/GFM syntax." />
+
+  <!-- Inter font — preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!--
+    Google AdSense — paste your publisher script here after account approval:
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+  -->
+</head>
+<body class="overflow-hidden" style="background: var(--color-bg);">
+
+  <!-- Top ad (leaderboard — min-height reserved to prevent layout shift) -->
+  <AdSlot slot="ad-top" />
+
+  <!-- Main layout: editor fills available space, sidebar ad on xl+ screens -->
+  <div
+    class="xl:grid xl:grid-cols-[1fr_168px]"
+    style="height: calc(100vh - 90px);"
+  >
+    <!-- React island — client:only skips SSR (safe for DOMPurify, Mermaid, CodeMirror) -->
+    <EditorApp client:only="react" />
+
+    <!-- Sidebar ad — renders only when viewport ≥ 1280px -->
+    <aside
+      class="hidden xl:flex flex-col items-center pt-4 px-2"
+      style="border-left: 1px solid var(--color-border-subtle); background: var(--color-surface-alt);"
+      data-no-print
+    >
+      <AdSlot slot="ad-sidebar" />
+    </aside>
+  </div>
+
+  <!-- Bottom ad -->
+  <AdSlot slot="ad-bottom" />
+
+</body>
+</html>
