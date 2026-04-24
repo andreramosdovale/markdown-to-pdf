@@ -1,5 +1,5 @@
-import { useEffect, useRef, useMemo } from 'react';
-import { parseMarkdown } from '../lib/markdown';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { parseMarkdown, preloadKatex } from '../lib/markdown';
 import type { Settings } from './EditorApp';
 
 interface Props {
@@ -8,25 +8,40 @@ interface Props {
   darkMode: boolean;
 }
 
-async function getMermaid(dark: boolean) {
-  const mermaid = (await import('mermaid')).default;
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: dark ? 'dark' : 'neutral',
-    securityLevel: 'loose',
-    fontFamily: 'Inter, system-ui, sans-serif',
-  });
-  return mermaid;
-}
+let mermaidPromise: Promise<typeof import('mermaid').default> | null = null;
 
-let diagramCounter = 0;
+function getMermaid() {
+  if (!mermaidPromise) {
+    mermaidPromise = import('mermaid').then(m => m.default);
+  }
+  return mermaidPromise;
+}
 
 export default function MarkdownPreview({ content, settings, darkMode }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const html = useMemo(() => parseMarkdown(content), [content]);
+  const svgCache = useRef(new Map<string, string>());
+
+  const [debouncedContent, setDebouncedContent] = useState(content);
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedContent(content), 150);
+    return () => clearTimeout(id);
+  }, [content]);
+
+  const [katexVersion, setKatexVersion] = useState(0);
+  useEffect(() => {
+    if (/\$/.test(debouncedContent)) {
+      preloadKatex().then(() => setKatexVersion(v => v + 1));
+    }
+  }, [debouncedContent]);
+
+  const html = useMemo(
+    () => parseMarkdown(debouncedContent),
+    [debouncedContent, katexVersion],
+  );
 
   useEffect(() => {
     let cancelled = false;
+    let localCounter = 0;
 
     async function renderDiagrams() {
       const container = containerRef.current;
@@ -35,7 +50,7 @@ export default function MarkdownPreview({ content, settings, darkMode }: Props) 
       const nodes = Array.from(container.querySelectorAll<HTMLElement>('pre.mermaid'));
       if (!nodes.length) return;
 
-      const mermaid = await getMermaid(darkMode);
+      const mermaid = await getMermaid();
       if (cancelled) return;
 
       mermaid.initialize({
@@ -47,9 +62,17 @@ export default function MarkdownPreview({ content, settings, darkMode }: Props) 
 
       for (const node of nodes) {
         const diagramText = node.textContent ?? '';
-        const id = `mermaid-${++diagramCounter}`;
+        const cached = svgCache.current.get(diagramText);
+
+        if (cached) {
+          if (!cancelled) node.innerHTML = cached;
+          continue;
+        }
+
+        const id = `mermaid-${++localCounter}`;
         try {
           const { svg } = await mermaid.render(id, diagramText);
+          svgCache.current.set(diagramText, svg);
           if (!cancelled) node.innerHTML = svg;
         } catch (err) {
           if (!cancelled) {
@@ -73,7 +96,6 @@ export default function MarkdownPreview({ content, settings, darkMode }: Props) 
         fontSize: `${settings.fontSize}pt`,
         lineHeight: settings.lineHeight,
       }}
-      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

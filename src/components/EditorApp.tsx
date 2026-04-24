@@ -4,6 +4,7 @@ import SplitPane from './SplitPane';
 import SettingsDrawer from './SettingsDrawer';
 import { loadContent, saveContent, loadSettings, saveSettings } from '../lib/storage';
 import { exportPdf } from '../lib/pdf';
+import DEMO_CONTENT from '../demo.md?raw';
 
 export type ViewMode = 'split' | 'editor' | 'preview';
 
@@ -23,61 +24,31 @@ const DEFAULT_SETTINGS: Settings = {
   lineHeight: 1.7,
 };
 
-const DEMO_CONTENT = `# Welcome to Markdown → PDF
-
-Write your document here. The preview updates as you type.
-
-## Mermaid Diagrams
-
-\`\`\`mermaid
-flowchart LR
-  A[Write Markdown] --> B[Preview]
-  B --> C{Happy?}
-  C -- Yes --> D[Export PDF]
-  C -- No  --> A
-\`\`\`
-
-## Math Formulas
-
-Inline: $E = mc^2$
-
-Block:
-
-$$\\int_{-\\infty}^{\\infty} e^{-x^2}\\, dx = \\sqrt{\\pi}$$
-
-## Code
-
-\`\`\`typescript
-function greet(name: string): string {
-  return \`Hello, \${name}!\`;
-}
-\`\`\`
-
-## Table
-
-| Feature       | Supported |
-|---------------|-----------|
-| Mermaid       | ✓         |
-| Math (KaTeX)  | ✓         |
-| Syntax HL     | ✓         |
-| Dark mode     | ✓         |
-
-> **Tip:** Use **Alt+1/2/3** to switch view modes, and **Ctrl+P** to export.
-`;
-
 export default function EditorApp() {
   const [content, setContent]           = useState(() => loadContent() ?? DEMO_CONTENT);
   const [settings, setSettings]         = useState<Settings>(() => loadSettings() ?? DEFAULT_SETTINGS);
   const [viewMode, setViewMode]         = useState<ViewMode>('split');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [darkMode, setDarkMode]         = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches,
+  );
 
-  useEffect(() => { saveContent(content); }, [content]);
+  useEffect(() => {
+    const id = setTimeout(() => saveContent(content), 500);
+    return () => clearTimeout(id);
+  }, [content]);
   useEffect(() => { saveSettings(settings); }, [settings]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setDarkMode(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -96,7 +67,7 @@ export default function EditorApp() {
   const handleExport = useCallback(() => exportPdf(settings), [settings]);
 
   return (
-    <div className="flex flex-col h-screen bg-bg">
+    <div className="flex flex-col h-full bg-bg">
       <TopBar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
