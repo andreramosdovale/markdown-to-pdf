@@ -1,11 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { HelmetProvider } from 'react-helmet-async';
 import EditorApp from './components/EditorApp';
 import AdSlot from './components/AdSlot';
 import './styles/global.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <HelmetProvider>
     <div className="flex flex-col h-screen overflow-hidden">
       <AdSlot slot="ad-top" />
 
@@ -28,5 +30,6 @@ createRoot(document.getElementById('root')!).render(
 
       <AdSlot slot="ad-bottom" />
     </div>
+    </HelmetProvider>
   </StrictMode>,
 );

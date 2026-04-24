@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import TopBar from './TopBar';
 import SplitPane from './SplitPane';
 import SettingsDrawer from './SettingsDrawer';
@@ -67,6 +68,12 @@ export default function EditorApp() {
   const handleExport = useCallback(() => exportPdf(settings), [settings]);
 
   return (
+    <>
+      <Helmet>
+        <title>Markdown to PDF Converter — Free, Online, No Install</title>
+        <meta name="description" content="Convert Markdown to PDF instantly in your browser. Supports Mermaid diagrams, KaTeX math formulas, syntax highlighting and dark mode. No upload, no server, completely free." />
+        <link rel="canonical" href="https://YOUR-DOMAIN.com/" />
+      </Helmet>
     <div className="flex flex-col h-full bg-bg">
       <TopBar
         viewMode={viewMode}
@@ -95,5 +102,6 @@ export default function EditorApp() {
         defaultSettings={DEFAULT_SETTINGS}
       />
     </div>
+    </>
   );
 }
